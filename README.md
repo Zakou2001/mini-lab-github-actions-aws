@@ -1,0 +1,1 @@
+# mini-lab-github-actions-aws
