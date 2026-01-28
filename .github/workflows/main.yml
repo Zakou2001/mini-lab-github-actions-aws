@@ -23,3 +23,18 @@ jobs:
       - name: Deploy to S3
         run: |
           aws s3 sync . s3://mini-lab-cicd-tonnom --delete --exclude ".git/*" --exclude ".github/*"
+      - name: Deploy app on EC2 via SSM
+        env:
+          INSTANCE_ID: i-0c1e4b421908fdedd
+          BUCKET_NAME: mini-lab-cicd-tonnom
+        run: |
+          aws ssm send-command \
+            --targets "Key=instanceIds,Values=$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy app from S3" \
+            --parameters 'commands=[
+              "aws s3 cp s3://'$BUCKET_NAME'/app.zip /tmp/app.zip",
+              "unzip -o /tmp/app.zip -d /opt/app",
+              "bash /opt/app/start.sh"
+            ]' \
+            --region eu-north-1
